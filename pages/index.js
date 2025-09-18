@@ -12,7 +12,7 @@ export default function Home() {
     const checkMobile = () => {
       const mobile = window.innerWidth < 768;
       setIsMobile(mobile);
-      if (!mobile) setMobileMenuOpen(false); // Close mobile menu when resizing to desktop
+      if (!mobile) setMobileMenuOpen(false);
     };
     
     checkMobile();
@@ -32,7 +32,11 @@ export default function Home() {
       {/* Header */}
       <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: isMobile ? '1rem' : '1rem 2rem', borderBottom: '1px solid #333' }}>
         <div style={{ display: 'flex', alignItems: 'center' }}>
-          <img src="https://res.cloudinary.com/dqhawdcol/image/upload/v1758201861/y3p2lwz2oq5gwny6ktyu.svg" alt="Shamana Logo" style={{ height: isMobile ? '25px' : '30px', marginRight: isMobile ? '1rem' : '2rem' }} />
+          <img 
+            src="https://res.cloudinary.com/dqhawdcol/image/upload/v1758201861/y3p2lwz2oq5gwny6ktyu.svg" 
+            alt="Shamana Logo" 
+            style={{ maxWidth: isMobile ? '120px' : '150px', height: 'auto', marginRight: isMobile ? '1rem' : '2rem' }} 
+          />
           {!isMobile && (
             <nav style={{ display: 'flex', gap: '2rem' }}>
               <a href="#" style={{ color: 'white', textDecoration: 'none', fontWeight: '600', fontSize: '1rem' }}>Home</a>
@@ -63,21 +67,24 @@ export default function Home() {
           </div>
         )}
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ position: 'relative' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => setShowDropdown(!showDropdown)}>
-              <img src="https://res.cloudinary.com/dqhawdcol/image/upload/v1758202400/e9ifs1tewfgemgxfc5kc.jpg" alt="User" style={{ width: isMobile ? '28px' : '32px', height: isMobile ? '28px' : '32px', borderRadius: '50%' }} />
-              {!isMobile && <FaCaretDown />}
-            </div>
-            {showDropdown && (
-              <div style={{ position: 'absolute', right: 0, top: '100%', backgroundColor: '#222', borderRadius: '5px', padding: '0.5rem', minWidth: '150px', marginTop: '0.5rem', zIndex: 1000 }}>
-                <div style={{ padding: '0.5rem', cursor: 'pointer' }}>Profile</div>
-                <div style={{ padding: '0.5rem', cursor: 'pointer' }}>Settings</div>
-                <div style={{ padding: '0.5rem', cursor: 'pointer' }}>Logout</div>
+        {/* Profile button - hidden on mobile */}
+        {!isMobile && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', cursor: 'pointer' }} onClick={() => setShowDropdown(!showDropdown)}>
+                <img src="https://res.cloudinary.com/dqhawdcol/image/upload/v1758202400/e9ifs1tewfgemgxfc5kc.jpg" alt="User" style={{ width: '32px', height: '32px', borderRadius: '50%' }} />
+                <FaCaretDown />
               </div>
-            )}
+              {showDropdown && (
+                <div style={{ position: 'absolute', right: 0, top: '100%', backgroundColor: '#222', borderRadius: '5px', padding: '0.5rem', minWidth: '150px', marginTop: '0.5rem', zIndex: 1000 }}>
+                  <div style={{ padding: '0.5rem', cursor: 'pointer' }}>Profile</div>
+                  <div style={{ padding: '0.5rem', cursor: 'pointer' }}>Settings</div>
+                  <div style={{ padding: '0.5rem', cursor: 'pointer' }}>Logout</div>
+                </div>
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </header>
 
       {/* Mobile Menu Overlay */}
