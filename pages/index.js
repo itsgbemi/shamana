@@ -99,7 +99,7 @@ export default function Home() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', width: '30%' }}>
           <FaMusic style={{ fontSize: '1.5rem' }} />
           <div>
-            <div style={{ fontWeight: '600' }}Song Title</div>
+            <div style={{ fontWeight: '600' }}>Song Title</div>
             <div style={{ fontSize: '0.8rem', color: '#999' }}>Artist Name</div>
           </div>
         </div>
