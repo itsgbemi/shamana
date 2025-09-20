@@ -1,12 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
+import { createClient } from '@supabase/supabase-js';
 
 export default function Shamana() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [currentSong, setCurrentSong] = useState(null);
+  const [songs, setSongs] = useState([]);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const audioRef = useRef(null);
   const autoPlayRef = useRef(null);
+
+  // Initialize Supabase client
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
   const slides = [
     {
@@ -140,6 +151,32 @@ export default function Shamana() {
     { day: "25", month: "Sep", title: "R&B Vocal Session", details: "5:00 PM • Vocal Booth" }
   ];
 
+  // Fetch songs from Supabase
+  useEffect(() => {
+    fetchSongs();
+  }, []);
+
+  const fetchSongs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('songs')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching songs:', error);
+        return;
+      }
+
+      if (data && data.length > 0) {
+        setSongs(data);
+        setCurrentSong(data[0]);
+      }
+    } catch (error) {
+      console.error('Error fetching songs:', error);
+    }
+  };
+
   useEffect(() => {
     startAutoPlay();
     return () => {
@@ -174,7 +211,16 @@ export default function Shamana() {
   };
 
   const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
+    if (audioRef.current) {
+      if (isPlaying) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(error => {
+          console.error('Play error:', error);
+        });
+      }
+      setIsPlaying(!isPlaying);
+    }
   };
 
   const handleLike = () => {
@@ -183,6 +229,60 @@ export default function Shamana() {
 
   const toggleDropdown = () => {
     setShowDropdown(!showDropdown);
+  };
+
+  const playSong = (song) => {
+    setCurrentSong(song);
+    setIsPlaying(true);
+    // Audio will auto-play when src changes
+  };
+
+  const handleTimeUpdate = () => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      setDuration(audioRef.current.duration || 0);
+    }
+  };
+
+  const handleProgressClick = (e) => {
+    if (audioRef.current && duration) {
+      const progressBar = e.currentTarget;
+      const clickPosition = e.clientX - progressBar.getBoundingClientRect().left;
+      const progressWidth = progressBar.offsetWidth;
+      const newTime = (clickPosition / progressWidth) * duration;
+      audioRef.current.currentTime = newTime;
+      setCurrentTime(newTime);
+    }
+  };
+
+  const formatTime = (seconds) => {
+    if (isNaN(seconds)) return '0:00';
+    const mins = Math.floor(seconds / 60);
+    const secs = Math.floor(seconds % 60);
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const nextSong = () => {
+    if (songs.length > 0 && currentSong) {
+      const currentIndex = songs.findIndex(song => song.id === currentSong.id);
+      const nextIndex = (currentIndex + 1) % songs.length;
+      playSong(songs[nextIndex]);
+    }
+  };
+
+  const prevSong = () => {
+    if (songs.length > 0 && currentSong) {
+      const currentIndex = songs.findIndex(song => song.id === currentSong.id);
+      const prevIndex = (currentIndex - 1 + songs.length) % songs.length;
+      playSong(songs[prevIndex]);
+    }
+  };
+
+  // Get public URL for Supabase storage
+  const getPublicUrl = (path) => {
+    if (!path) return null;
+    const { data } = supabase.storage.from('songs').getPublicUrl(path);
+    return data.publicUrl;
   };
 
   return (
@@ -210,8 +310,9 @@ export default function Shamana() {
         .search-bar i{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#999;}
         .actions{display:flex;align-items:center;gap:15px;position:relative;}
         .upload-btn{display:flex;align-items:center;gap:5px;font-weight:500;cursor:pointer;}
-        .user-account{display:flex;align-items:center;gap:5px;cursor:pointer;position:relative;}
-        .user-account i{font-size:24px;color:#fff;}
+        .user-account{display:flex;align-items:center;gap:8px;cursor:pointer;position:relative;}
+        .user-account i:first-child{font-size:24px;color:#fff;}
+        .user-account i:last-child{font-size:14px;color:#ccc;}
         .dropdown-content{display:${showDropdown ? 'block' : 'none'};position:absolute;top:100%;right:0;background-color:#1a1a1a;min-width:160px;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);z-index:1000;border-radius:8px;overflow:hidden;margin-top:10px;}
         .dropdown-item{display:flex;align-items:center;gap:10px;padding:12px 16px;color:#fff;font-size:14px;transition:background-color 0.2s;}
         .dropdown-item:hover{background-color:#6a11cb;}
@@ -301,7 +402,7 @@ export default function Shamana() {
         .player-controls .play-pause{font-size:28px;}
         .player-progress{flex:2;max-width:40%;display:flex;align-items:center;gap:10px;}
         .progress-bar{flex:1;height:4px;background:rgba(255,255,255,0.3);border-radius:2px;cursor:pointer;position:relative;}
-        .progress{position:absolute;height:100%;background:#fff;border-radius:2px;width:30%;}
+        .progress{position:absolute;height:100%;background:#fff;border-radius:2px;width:${duration ? (currentTime / duration) * 100 : 0}%;}
         .time{font-size:0.7rem;color:#ccc;min-width:35px;}
         .time:first-child{text-align:right;}
         .player-actions{flex:1;max-width:30%;display:flex;justify-content:flex-end;gap:15px;}
@@ -342,6 +443,24 @@ export default function Shamana() {
         .dropdown-content{right:-20px;}
         }
       `}</style>
+
+      {/* Hidden audio element */}
+      <audio
+        ref={audioRef}
+        src={currentSong ? getPublicUrl(currentSong.song_path) : ''}
+        onTimeUpdate={handleTimeUpdate}
+        onEnded={nextSong}
+        onLoadedMetadata={() => {
+          if (audioRef.current) {
+            setDuration(audioRef.current.duration);
+          }
+        }}
+        onError={(e) => {
+          console.error('Audio error:', e);
+          console.log('Current song path:', currentSong?.song_path);
+          console.log('Public URL:', currentSong ? getPublicUrl(currentSong.song_path) : '');
+        }}
+      />
 
       <header>
         <div className="header">
@@ -490,24 +609,24 @@ export default function Shamana() {
 
       <div className="player-bar">
         <div className="player-info">
-          <div className="song-name">Do I Wanna Know?</div>
-          <div className="artist-name">Arctic Monkeys</div>
+          <div className="song-name">{currentSong?.title || 'No song selected'}</div>
+          <div className="artist-name">{currentSong?.author || 'Select a song to play'}</div>
         </div>
         <div className="player-controls">
           <button className="shuffle"><i className="fas fa-random"></i></button>
-          <button className="step-backward"><i className="fas fa-step-backward"></i></button>
+          <button className="step-backward" onClick={prevSong}><i className="fas fa-step-backward"></i></button>
           <button className="play-pause" onClick={handlePlayPause}>
             <i className={isPlaying ? "fas fa-pause-circle" : "fas fa-play-circle"}></i>
           </button>
-          <button className="step-forward"><i className="fas fa-step-forward"></i></button>
+          <button className="step-forward" onClick={nextSong}><i className="fas fa-step-forward"></i></button>
           <button className="repeat"><i className="fas fa-redo"></i></button>
         </div>
         <div className="player-progress">
-          <div className="time">1:20</div>
-          <div className="progress-bar">
+          <div className="time">{formatTime(currentTime)}</div>
+          <div className="progress-bar" onClick={handleProgressClick}>
             <div className="progress"></div>
           </div>
-          <div className="time">4:30</div>
+          <div className="time">{formatTime(duration)}</div>
         </div>
         <div className="player-actions">
           <button className={`like ${isLiked ? 'active' : ''}`} onClick={handleLike}>
