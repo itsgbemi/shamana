@@ -5,6 +5,7 @@ export default function Shamana() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLiked, setIsLiked] = useState(false);
+  const [showDropdown, setShowDropdown] = useState(false);
   const autoPlayRef = useRef(null);
 
   const slides = [
@@ -180,6 +181,10 @@ export default function Shamana() {
     setIsLiked(!isLiked);
   };
 
+  const toggleDropdown = () => {
+    setShowDropdown(!showDropdown);
+  };
+
   return (
     <>
       <Head>
@@ -203,10 +208,14 @@ export default function Shamana() {
         .search-bar{flex:1;max-width:400px;margin:0 20px;position:relative;}
         .search-bar input{width:100%;padding:8px 15px;border-radius:20px;border:none;background:#222;color:#fff;}
         .search-bar i{position:absolute;right:15px;top:50%;transform:translateY(-50%);color:#999;}
-        .actions{display:flex;align-items:center;gap:15px;}
+        .actions{display:flex;align-items:center;gap:15px;position:relative;}
         .upload-btn{display:flex;align-items:center;gap:5px;font-weight:500;cursor:pointer;}
-        .user-account{display:flex;align-items:center;gap:5px;cursor:pointer;}
-        .user-account i{font-size:32px;color:#fff;}
+        .user-account{display:flex;align-items:center;gap:5px;cursor:pointer;position:relative;}
+        .user-account i{font-size:24px;color:#fff;}
+        .dropdown-content{display:${showDropdown ? 'block' : 'none'};position:absolute;top:100%;right:0;background-color:#1a1a1a;min-width:160px;box-shadow:0px 8px 16px 0px rgba(0,0,0,0.2);z-index:1000;border-radius:8px;overflow:hidden;margin-top:10px;}
+        .dropdown-item{display:flex;align-items:center;gap:10px;padding:12px 16px;color:#fff;font-size:14px;transition:background-color 0.2s;}
+        .dropdown-item:hover{background-color:#6a11cb;}
+        .dropdown-item i{font-size:16px;width:20px;}
         .hero-carousel {position:relative;margin:40px 0;border-radius:12px;overflow:hidden;height:400px;}
         .carousel-inner {position:relative;width:100%;height:100%;}
         .carousel-slide {position:absolute;top:0;left:0;width:100%;height:100%;opacity:0;transition:opacity 0.8s ease;display:flex;align-items:center;padding:0 60px;}
@@ -330,6 +339,7 @@ export default function Shamana() {
         .content-section{flex-direction:column;}
         .feed-container,.trybe-events-container{width:100%;}
         .playlist-thumbnail{height:150px;}
+        .dropdown-content{right:-20px;}
         }
       `}</style>
 
@@ -350,9 +360,23 @@ export default function Shamana() {
               <i className="fas fa-cloud-upload-alt"></i>
               <span>Upload</span>
             </div>
-            <div className="user-account">
+            <div className="user-account" onClick={toggleDropdown}>
               <i className="fas fa-user-circle"></i>
               <i className="fas fa-chevron-down"></i>
+              <div className="dropdown-content">
+                <a href="#" className="dropdown-item">
+                  <i className="fas fa-user"></i>
+                  <span>Profile</span>
+                </a>
+                <a href="#" className="dropdown-item">
+                  <i className="fas fa-award"></i>
+                  <span>Rewards</span>
+                </a>
+                <a href="#" className="dropdown-item">
+                  <i className="fas fa-sign-out-alt"></i>
+                  <span>Logout</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
